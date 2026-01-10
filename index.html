@@ -35,12 +35,12 @@
     h1 {
       font-size: clamp(2.2rem, 3.6vw, 3.2rem);
       font-weight: 650;
-      margin: 0 0 22px 0;
+      margin: 0 0 10px 0;
       letter-spacing: 0.4px;
     }
 
     .subtitle{
-      margin: 0 0 26px 0;
+      margin: 0 0 22px 0;
       opacity: 0.75;
       font-size: 1.05rem;
     }
@@ -50,7 +50,7 @@
       gap: 18px;
       justify-content: center;
       flex-wrap: wrap;
-      margin-bottom: 22px;
+      margin-bottom: 16px;
     }
 
     .btn {
@@ -71,6 +71,63 @@
       background: var(--glass2);
       transform: translateY(-3px);
       box-shadow: 0 18px 55px rgba(0,0,0,0.35);
+    }
+
+    /* Viktige meldinger (feed) */
+    .notice{
+      width: min(980px, 92vw);
+      margin: 14px auto 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 18px 55px rgba(0,0,0,0.35);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow: hidden;
+      text-align: left;
+    }
+
+    .notice-title{
+      padding: 14px 18px;
+      font-weight: 650;
+      letter-spacing: 0.3px;
+      background: rgba(0,0,0,0.18);
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+    }
+
+    .notice-list{
+      padding: 14px 18px;
+      display: grid;
+      gap: 10px;
+      font-size: 1.15rem;
+      min-height: 24px;
+    }
+
+    .notice-item{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .notice-badge{
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.18);
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .notice-text{
+      line-height: 1.25;
+    }
+
+    .notice-meta{
+      opacity:.65;
+      font-size:.9rem;
+      margin-top:2px;
     }
 
     /* Slideshow frame */
@@ -117,63 +174,15 @@
       font-size: 0.95rem;
     }
 
-    .notice{
-  width: min(980px, 92vw);
-  margin: 18px auto 18px;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.10);
-  border: 1px solid rgba(255,255,255,0.14);
-  box-shadow: 0 18px 55px rgba(0,0,0,0.35);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  overflow: hidden;
-}
-
-.notice-title{
-  padding: 14px 18px;
-  font-weight: 650;
-  letter-spacing: 0.3px;
-  background: rgba(0,0,0,0.18);
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-}
-
-.notice-list{
-  padding: 14px 18px;
-  display: grid;
-  gap: 10px;
-  font-size: 1.15rem;
-}
-
-.notice-item{
-  display:flex;
-  gap:12px;
-  align-items:flex-start;
-}
-
-.notice-badge{
-  flex: 0 0 auto;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.16);
-  border: 1px solid rgba(255,255,255,0.18);
-  font-size: 0.9rem;
-  opacity: 0.9;
-}
-
-.notice-text{
-  line-height: 1.25;
-}
-
-
-    /* Litt bedre for store skjermer */
     @media (min-width: 1400px){
       .container{ width: min(1300px, 92vw); }
       .slideshow{ width: min(1120px, 92vw); }
+      .notice{ width: min(1120px, 92vw); }
     }
   </style>
 </head>
-<body>
 
+<body>
   <div class="container">
     <h1>Panorama Arena – Hallen</h1>
     <p class="subtitle">Kalenderoversikt</p>
@@ -183,6 +192,11 @@
       <a class="btn" href="kalendere/sal2etg.html">Sal 2. etg</a>
     </div>
 
+    <section class="notice" aria-label="Viktige meldinger">
+      <div class="notice-title">Viktige meldinger</div>
+      <div id="noticeList" class="notice-list">Laster meldinger …</div>
+    </section>
+
     <div class="slideshow" id="slideshow" aria-label="Bilder fra Panorama Arena">
       <div class="slide is-active"></div>
       <div class="slide"></div>
@@ -191,14 +205,53 @@
     <div class="hint">Trykk på ønsket kalender.</div>
   </div>
 
-<section class="notice" aria-label="Viktige meldinger">
-  <div class="notice-title">Viktige meldinger</div>
-  <div id="noticeList" class="notice-list">Ingen meldinger akkurat nå.</div>
-</section>
-
-  
   <script>
-    // Bildene du lastet opp:
+    // ---- FEED (leser feed.json) ----
+    async function loadFeed(){
+      try{
+        const res = await fetch("feed.json?ts=" + Date.now(), { cache: "no-store" });
+        if(!res.ok) throw new Error("feed.json " + res.status);
+
+        const data = await res.json();
+        const el = document.getElementById("noticeList");
+        const items = (data.items || []).slice(0, 6);
+
+        if(items.length === 0){
+          el.textContent = "Ingen meldinger akkurat nå.";
+          return;
+        }
+
+        el.innerHTML = items.map(it => {
+          const kind = (it.kind || "INFO").toUpperCase();
+          const when = it.createdAt ? new Date(it.createdAt).toLocaleString("no-NO") : "";
+          return `
+            <div class="notice-item">
+              <div class="notice-badge">${escapeHtml(kind)}</div>
+              <div class="notice-text">
+                ${escapeHtml(it.text || "")}
+                ${when ? `<div class="notice-meta">${escapeHtml(when)}</div>` : ``}
+              </div>
+            </div>
+          `;
+        }).join("");
+      }catch(e){
+        console.error(e);
+        const el = document.getElementById("noticeList");
+        if (el) el.textContent = "Kunne ikke laste meldinger (sjekk feed.json).";
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    loadFeed();
+    setInterval(loadFeed, 10_000); // hver 10. sekund
+
+
+    // ---- SLIDESHOW ----
     const images = [
       "assets/slideshow/pa1.webp",
       "assets/slideshow/pa2.webp",
@@ -207,7 +260,7 @@
       "assets/slideshow/pa5.webp",
       "assets/slideshow/pa6.webp",
       "assets/slideshow/pa7.webp",
-      "assets/slideshow/pa8.webp"
+      "assets/slideshow/pa8.jpg"
     ];
 
     const slides = Array.from(document.querySelectorAll("#slideshow .slide"));
@@ -218,13 +271,13 @@
       el.style.backgroundImage = `url("${url}")`;
     }
 
-    // Preload for å unngå “blink”
+    // Preload for å unngå blink
     images.forEach(src => { const img = new Image(); img.src = src; });
 
     setSlide(slides[0], images[0]);
     setSlide(slides[1], images[1 % images.length]);
 
-    const intervalMs = 6500; // 6.5 sek per bilde
+    const intervalMs = 6500;
 
     setInterval(() => {
       const back = 1 - front;
@@ -237,43 +290,5 @@
       front = back;
     }, intervalMs);
   </script>
-
-  <script>
-  async function loadFeed(){
-    try{
-      const res = await fetch("feed.json?ts=" + Date.now(), { cache: "no-store" });
-      if(!res.ok) throw new Error("feed.json " + res.status);
-      const data = await res.json();
-
-      const el = document.getElementById("noticeList");
-      const items = (data.items || []).slice(0, 6);
-
-      if(items.length === 0){
-        el.textContent = "Ingen meldinger akkurat nå.";
-        return;
-      }
-
-      el.innerHTML = items.map(it => `
-        <div class="notice-item">
-          <div class="notice-badge">${it.kind || "INFO"}</div>
-          <div class="notice-text">${escapeHtml(it.text)}<div style="opacity:.65;font-size:.9rem;margin-top:2px">${new Date(it.createdAt).toLocaleString("no-NO")}</div></div>
-        </div>
-      `).join("");
-    }catch(e){
-      console.error(e);
-    }
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, m => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-    }[m]));
-  }
-
-  loadFeed();
-  setInterval(loadFeed, 10_000); // hver 10. sekund
-</script>
-
-  
 </body>
 </html>
