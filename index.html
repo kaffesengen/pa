@@ -135,6 +135,27 @@
       align-items:flex-start;
     }
 
+        /* Pending delete: behold linjen, men tone den ned */
+    .notice-item.is-deleting{
+      opacity: 0.45;
+    }
+    
+    .notice-item.is-deleting .notice-text{
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+      text-decoration-color: rgba(255,255,255,0.55);
+    }
+    
+    .notice-item.is-deleting .notice-badge{
+      opacity: 0.65;
+    }
+    
+    .notice-item.is-deleting .notice-delete{
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    
     .notice-badge{
       flex: 0 0 auto;
       padding: 6px 10px;
@@ -313,6 +334,13 @@
     // Stored only in this browser tab session
     let adminAuth = sessionStorage.getItem("adminAuth") || "";
 
+    // -------------------- PENDING DELETE --------------------
+    // Id-er som er "pending delete" (behold strikethrough mellom polls)
+    const deletingIds = new Set(JSON.parse(sessionStorage.getItem("deletingIds") || "[]"));
+  
+    function saveDeletingIds(){
+      sessionStorage.setItem("deletingIds", JSON.stringify(Array.from(deletingIds)));
+    }
     // -------------------- HELPERS --------------------
     function escapeHtml(s){
       return String(s).replace(/[&<>"']/g, m => ({
@@ -387,6 +415,13 @@ await loadFeed();
 
         const data = await res.json();
         const items = (data.items || []).slice(0, MAX_SHOW);
+        const idsInFeed = new Set(items.map(x => String(x.id || "")).filter(Boolean));
+        let changed = false;
+        for (const id of Array.from(deletingIds)) {
+          if (!idsInFeed.has(id)) { deletingIds.delete(id); changed = true; }
+        }
+        if (changed) saveDeletingIds();
+
         const now = Date.now();
 
         if(items.length === 0){
@@ -403,11 +438,15 @@ await loadFeed();
           const isInfo = kind === "INFO";
           const when = it.createdAt ? fmtNo(it.createdAt) : "";
 
+          const isDeleting = it.id && deletingIds.has(String(it.id));
+
           const classes = [
             "notice-item",
             isNew ? "is-new" : "",
-            isInfo ? "is-info" : ""
+            isInfo ? "is-info" : "",
+            isDeleting ? "is-deleting" : ""
           ].filter(Boolean).join(" ");
+
 
           // NOTE: id is required for delete to work
           const idAttr = it.id ? String(it.id) : "";
@@ -446,21 +485,30 @@ await loadFeed();
               if (!ok) return;
 
               // Optimistisk: skjul linjen med én gang
-const row = btn.closest(".notice-item");
-if (row) row.style.opacity = "0.35";
+              // Markér som "pending delete" før vi kaller API
+              deletingIds.add(String(id));
+              saveDeletingIds();
+              
+              // Vis strikethrough + nedtoning med en gang
+              const row = btn.closest(".notice-item");
+              if (row) row.classList.add("is-deleting");
+              
+              const success = await deleteItem(id);
+              if (!success) {
+                // Rull tilbake hvis sletting feiler
+                deletingIds.delete(String(id));
+                saveDeletingIds();
+                if (row) row.classList.remove("is-deleting");
+              
+                alert("Kunne ikke slette. Sjekk login (admin/pass) og at boten kjører.");
+                return;
+              }
+              
+              // IKKE fjern raden her.
+              // Den forsvinner automatisk når feed.json faktisk er oppdatert.
+              // Trigger en ekstra refresh litt senere for raskere sync:
+              setTimeout(loadFeed, 1200);
 
-const success = await deleteItem(id);
-if (!success) {
-  if (row) row.style.opacity = "1";
-  alert("Kunne ikke slette. Sjekk login (admin/pass) og at boten kjører.");
-  return;
-}
-
-// Fjern fra DOM med én gang
-if (row) row.remove();
-
-// Og oppdater etter litt, så alt er synket
-setTimeout(loadFeed, 1500);
 
             });
           });
