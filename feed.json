@@ -1,6 +1,12 @@
 {
-  "updatedAt": "2026-01-10T10:00:39.730Z",
+  "updatedAt": "2026-01-10T13:32:27.647Z",
   "items": [
+    {
+      "id": "08055455-5784-4f59-a919-147be368fb63",
+      "kind": "INFO",
+      "text": "Dette er nok en test",
+      "createdAt": "2026-01-10T13:32:27.646Z"
+    },
     {
       "id": "c258a88d-3841-4c86-ae87-3173f9dbf28c",
       "kind": "INFO",
