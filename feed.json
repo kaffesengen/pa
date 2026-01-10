@@ -1,6 +1,12 @@
 {
-  "updatedAt": "2026-01-10T14:38:51.467Z",
+  "updatedAt": "2026-01-10T14:52:50.679Z",
   "items": [
+    {
+      "id": "c4a3303b-a59d-4f6e-b63a-f6a652591018",
+      "kind": "INFO",
+      "text": "Dette er en testmelding",
+      "createdAt": "2026-01-10T14:52:50.679Z"
+    },
     {
       "id": "c258a88d-3841-4c86-ae87-3173f9dbf28c",
       "kind": "INFO",
