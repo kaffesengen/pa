@@ -6,10 +6,19 @@
   <title>Panorama Arena</title>
 
   <style>
+    :root{
+      --bg1:#0f2027;
+      --bg2:#203a43;
+      --bg3:#2c5364;
+      --glass: rgba(255,255,255,0.12);
+      --glass2: rgba(255,255,255,0.18);
+      --border: rgba(255,255,255,0.14);
+    }
+
     body {
       margin: 0;
-      height: 100vh;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
       color: white;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       display: flex;
@@ -18,50 +27,162 @@
     }
 
     .container {
+      width: min(1100px, 92vw);
       text-align: center;
+      padding: 48px 0;
     }
 
     h1 {
-      font-size: 3.2rem;
-      font-weight: 600;
-      margin-bottom: 3rem;
-      letter-spacing: 0.5px;
+      font-size: clamp(2.2rem, 3.6vw, 3.2rem);
+      font-weight: 650;
+      margin: 0 0 22px 0;
+      letter-spacing: 0.4px;
+    }
+
+    .subtitle{
+      margin: 0 0 26px 0;
+      opacity: 0.75;
+      font-size: 1.05rem;
     }
 
     .buttons {
       display: flex;
-      gap: 2rem;
+      gap: 18px;
       justify-content: center;
       flex-wrap: wrap;
+      margin-bottom: 22px;
     }
 
-    a {
+    .btn {
       text-decoration: none;
-      padding: 1.5rem 3rem;
+      padding: 18px 34px;
       border-radius: 16px;
-      background: rgba(255,255,255,0.12);
+      background: var(--glass);
       color: white;
-      font-size: 1.4rem;
+      font-size: 1.25rem;
       backdrop-filter: blur(10px);
-      transition: transform 0.2s, background 0.2s;
+      -webkit-backdrop-filter: blur(10px);
+      transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
     }
 
-    a:hover {
-      background: rgba(255,255,255,0.22);
-      transform: translateY(-4px);
+    .btn:hover {
+      background: var(--glass2);
+      transform: translateY(-3px);
+      box-shadow: 0 18px 55px rgba(0,0,0,0.35);
+    }
+
+    /* Slideshow frame */
+    .slideshow {
+      margin: 0 auto;
+      width: min(980px, 92vw);
+      aspect-ratio: 16 / 9;
+      border-radius: 22px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 22px 70px rgba(0,0,0,0.55);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.22);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transform: scale(1.03);
+      transition: opacity 900ms ease, transform 4500ms ease;
+      will-change: opacity, transform;
+      filter: saturate(1.05) contrast(1.02);
+    }
+
+    .slide.is-active {
+      opacity: 1;
+      transform: scale(1.08);
+    }
+
+    .slideshow::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.30));
+      pointer-events:none;
+    }
+
+    .hint {
+      margin-top: 14px;
+      opacity: 0.70;
+      font-size: 0.95rem;
+    }
+
+    /* Litt bedre for store skjermer */
+    @media (min-width: 1400px){
+      .container{ width: min(1300px, 92vw); }
+      .slideshow{ width: min(1120px, 92vw); }
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>Panorama Arena</h1>
+    <h1>Panorama Arena – Hallen</h1>
+    <p class="subtitle">Kalenderoversikt</p>
 
     <div class="buttons">
-  <a href="kalendere/hallen.html">Hallen</a>
-  <a href="kalendere/sal2etg.html">Sal 2. etg</a>
-</div>
+      <a class="btn" href="kalendere/hallen.html">Hallen</a>
+      <a class="btn" href="kalendere/sal2etg.html">Sal 2. etg</a>
+    </div>
+
+    <div class="slideshow" id="slideshow" aria-label="Bilder fra Panorama Arena">
+      <div class="slide is-active"></div>
+      <div class="slide"></div>
+    </div>
+
+    <div class="hint">Trykk på ønsket kalender.</div>
   </div>
+
+  <script>
+    // Bildene du lastet opp:
+    const images = [
+      "assets/slideshow/pa1.webp",
+      "assets/slideshow/pa2.webp",
+      "assets/slideshow/pa3.webp",
+      "assets/slideshow/pa4.webp",
+      "assets/slideshow/pa5.webp",
+      "assets/slideshow/pa6.webp",
+      "assets/slideshow/pa7.webp",
+      "assets/slideshow/pa8.jpg"
+    ];
+
+    const slides = Array.from(document.querySelectorAll("#slideshow .slide"));
+    let i = 0;
+    let front = 0;
+
+    function setSlide(el, url) {
+      el.style.backgroundImage = `url("${url}")`;
+    }
+
+    // Preload for å unngå “blink”
+    images.forEach(src => { const img = new Image(); img.src = src; });
+
+    setSlide(slides[0], images[0]);
+    setSlide(slides[1], images[1 % images.length]);
+
+    const intervalMs = 6500; // 6.5 sek per bilde
+
+    setInterval(() => {
+      const back = 1 - front;
+      i = (i + 1) % images.length;
+
+      setSlide(slides[back], images[i]);
+      slides[back].classList.add("is-active");
+      slides[front].classList.remove("is-active");
+
+      front = back;
+    }, intervalMs);
+  </script>
 
 </body>
 </html>
