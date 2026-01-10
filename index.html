@@ -179,6 +179,45 @@
       .slideshow{ width: min(1120px, 92vw); }
       .notice{ width: min(1120px, 92vw); }
     }
+
+    /* Ny-indikator (<=72t) */
+.notice-item.is-new .notice-badge{
+  position: relative;
+}
+
+/* Utropstegn som “pinger” */
+.notice-item.is-new .notice-badge::after{
+  content: "!";
+  margin-left: 8px;
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.22);
+  animation: pingFade 1.4s ease-in-out infinite;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Subtil blink/fade på INFO for nye meldinger */
+.notice-item.is-new.is-info{
+  animation: infoPulse 2.8s ease-in-out infinite;
+}
+
+/* Ikke blink hele boksen, bare gi litt “liv” */
+@keyframes infoPulse{
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.08); }
+}
+
+@keyframes pingFade{
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
   </style>
 </head>
 
@@ -214,7 +253,7 @@
 
         const data = await res.json();
         const el = document.getElementById("noticeList");
-        const items = (data.items || []).slice(0, 6);
+        const items = (data.items || []).slice(0, 5);
 
         if(items.length === 0){
           el.textContent = "Ingen meldinger akkurat nå.";
@@ -222,18 +261,43 @@
         }
 
         el.innerHTML = items.map(it => {
-          const kind = (it.kind || "INFO").toUpperCase();
-          const when = it.createdAt ? new Date(it.createdAt).toLocaleString("no-NO") : "";
-          return `
-            <div class="notice-item">
-              <div class="notice-badge">${escapeHtml(kind)}</div>
-              <div class="notice-text">
-                ${escapeHtml(it.text || "")}
-                ${when ? `<div class="notice-meta">${escapeHtml(when)}</div>` : ``}
-              </div>
-            </div>
-          `;
-        }).join("");
+          const el = document.getElementById("noticeList");
+const items = (data.items || []).slice(0, 5);
+const now = Date.now();
+const NEW_WINDOW_MS = 72 * 60 * 60 * 1000; // 72 timer
+
+if(items.length === 0){
+  el.textContent = "Ingen meldinger akkurat nå.";
+  return;
+}
+
+el.innerHTML = items.map(it => {
+  const kind = (it.kind || "INFO").toUpperCase();
+  const createdAtMs = it.createdAt ? Date.parse(it.createdAt) : 0;
+  const isNew = createdAtMs && (now - createdAtMs) <= NEW_WINDOW_MS;
+  const isInfo = kind === "INFO";
+
+  const when = it.createdAt
+    ? new Date(it.createdAt).toLocaleString("no-NO")
+    : "";
+
+  const classes = [
+    "notice-item",
+    isNew ? "is-new" : "",
+    isInfo ? "is-info" : ""
+  ].filter(Boolean).join(" ");
+
+  return `
+    <div class="${classes}">
+      <div class="notice-badge">${escapeHtml(kind)}</div>
+      <div class="notice-text">
+        ${escapeHtml(it.text || "")}
+        ${when ? `<div class="notice-meta">${escapeHtml(when)}</div>` : ``}
+      </div>
+    </div>
+  `;
+}).join("");
+
       }catch(e){
         console.error(e);
         const el = document.getElementById("noticeList");
