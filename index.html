@@ -65,6 +65,9 @@
       transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
       box-shadow: 0 14px 40px rgba(0,0,0,0.25);
       border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .btn:hover {
@@ -118,6 +121,8 @@
       font-size: 0.9rem;
       opacity: 0.9;
       margin-top: 2px;
+      position: relative;
+      line-height: 1;
     }
 
     .notice-text{
@@ -128,6 +133,37 @@
       opacity:.65;
       font-size:.9rem;
       margin-top:2px;
+    }
+
+    /* Ny-indikator (<=72t) */
+    .notice-item.is-new .notice-badge::after{
+      content: "!";
+      margin-left: 8px;
+      display: inline-flex;
+      width: 22px;
+      height: 22px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.22);
+      animation: pingFade 1.4s ease-in-out infinite;
+      font-weight: 800;
+    }
+
+    /* Subtil blink/fade på INFO for nye meldinger */
+    .notice-item.is-new.is-info{
+      animation: infoPulse 2.8s ease-in-out infinite;
+    }
+
+    @keyframes infoPulse{
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.08); }
+    }
+
+    @keyframes pingFade{
+      0%, 100% { opacity: 0.35; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.06); }
     }
 
     /* Slideshow frame */
@@ -179,45 +215,6 @@
       .slideshow{ width: min(1120px, 92vw); }
       .notice{ width: min(1120px, 92vw); }
     }
-
-    /* Ny-indikator (<=72t) */
-.notice-item.is-new .notice-badge{
-  position: relative;
-}
-
-/* Utropstegn som “pinger” */
-.notice-item.is-new .notice-badge::after{
-  content: "!";
-  margin-left: 8px;
-  display: inline-flex;
-  width: 22px;
-  height: 22px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.22);
-  animation: pingFade 1.4s ease-in-out infinite;
-  font-weight: 800;
-  line-height: 1;
-}
-
-/* Subtil blink/fade på INFO for nye meldinger */
-.notice-item.is-new.is-info{
-  animation: infoPulse 2.8s ease-in-out infinite;
-}
-
-/* Ikke blink hele boksen, bare gi litt “liv” */
-@keyframes infoPulse{
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.08); }
-}
-
-@keyframes pingFade{
-  0%, 100% { opacity: 0.35; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.06); }
-}
-
   </style>
 </head>
 
@@ -246,14 +243,22 @@
 
   <script>
     // ---- FEED (leser feed.json) ----
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+      }[m]));
+    }
+
     async function loadFeed(){
+      const el = document.getElementById("noticeList");
       try{
         const res = await fetch("feed.json?ts=" + Date.now(), { cache: "no-store" });
         if(!res.ok) throw new Error("feed.json " + res.status);
 
         const data = await res.json();
-        const el = document.getElementById("noticeList");
         const items = (data.items || []).slice(0, 5);
+        const now = Date.now();
+        const NEW_WINDOW_MS = 72 * 60 * 60 * 1000; // 72 timer
 
         if(items.length === 0){
           el.textContent = "Ingen meldinger akkurat nå.";
@@ -261,54 +266,46 @@
         }
 
         el.innerHTML = items.map(it => {
-          const el = document.getElementById("noticeList");
-const items = (data.items || []).slice(0, 5);
-const now = Date.now();
-const NEW_WINDOW_MS = 72 * 60 * 60 * 1000; // 72 timer
+          const kind = (it.kind || "INFO").toUpperCase();
+          const createdAtMs = it.createdAt ? Date.parse(it.createdAt) : 0;
+          const isNew = createdAtMs && (now - createdAtMs) <= NEW_WINDOW_MS;
+          const isInfo = kind === "INFO";
 
-if(items.length === 0){
-  el.textContent = "Ingen meldinger akkurat nå.";
-  return;
-}
+          const when = it.createdAt
+            ? new Date(it.createdAt).toLocaleString("no-NO")
+            : "";
 
-el.innerHTML = items.map(it => {
-  const kind = (it.kind || "INFO").toUpperCase();
-  const createdAtMs = it.createdAt ? Date.parse(it.createdAt) : 0;
-  const isNew = createdAtMs && (now - createdAtMs) <= NEW_WINDOW_MS;
-  const isInfo = kind === "INFO";
+          const classes = [
+            "notice-item",
+            isNew ? "is-new" : "",
+            isInfo ? "is-info" : ""
+          ].filter(Boolean).join(" ");
 
-  const when = it.createdAt
-    ? new Date(it.createdAt).toLocaleString("no-NO")
-    : "";
-
-  const classes = [
-    "notice-item",
-    isNew ? "is-new" : "",
-    isInfo ? "is-info" : ""
-  ].filter(Boolean).join(" ");
-
-  return `
-    <div class="${classes}">
-      <div class="notice-badge">${escapeHtml(kind)}</div>
-      <div class="notice-text">
-        ${escapeHtml(it.text || "")}
-        ${when ? `<div class="notice-meta">${escapeHtml(when)}</div>` : ``}
-      </div>
-    </div>
-  `;
-}).join("");
+          return `
+            <div class="${classes}">
+              <div class="notice-badge">${escapeHtml(kind)}</div>
+              <div class="notice-text">
+                ${escapeHtml(it.text || "")}
+                ${when ? `<div class="notice-meta">${escapeHtml(when)}</div>` : ``}
+              </div>
+            </div>
+          `;
+        }).join("");
 
       }catch(e){
         console.error(e);
-        const el = document.getElementById("noticeList");
-        if (el) el.textContent = "Kunne ikke laste meldinger (sjekk feed.json).";
+        el.innerHTML = `
+          <div class="notice-item">
+            <div class="notice-badge">FEIL</div>
+            <div class="notice-text">
+              Kunne ikke laste <b>feed.json</b>.
+              <div class="notice-meta">
+                Sjekk at <b>feed.json</b> ligger i repo-root og er committed.
+              </div>
+            </div>
+          </div>
+        `;
       }
-    }
-
-    function escapeHtml(s){
-      return String(s).replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-      }[m]));
     }
 
     loadFeed();
