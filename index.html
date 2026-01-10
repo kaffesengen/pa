@@ -117,6 +117,54 @@
       font-size: 0.95rem;
     }
 
+    .notice{
+  width: min(980px, 92vw);
+  margin: 18px auto 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 18px 55px rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.notice-title{
+  padding: 14px 18px;
+  font-weight: 650;
+  letter-spacing: 0.3px;
+  background: rgba(0,0,0,0.18);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+.notice-list{
+  padding: 14px 18px;
+  display: grid;
+  gap: 10px;
+  font-size: 1.15rem;
+}
+
+.notice-item{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.notice-badge{
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.18);
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.notice-text{
+  line-height: 1.25;
+}
+
+
     /* Litt bedre for store skjermer */
     @media (min-width: 1400px){
       .container{ width: min(1300px, 92vw); }
@@ -143,6 +191,12 @@
     <div class="hint">Trykk på ønsket kalender.</div>
   </div>
 
+<section class="notice" aria-label="Viktige meldinger">
+  <div class="notice-title">Viktige meldinger</div>
+  <div id="noticeList" class="notice-list">Ingen meldinger akkurat nå.</div>
+</section>
+
+  
   <script>
     // Bildene du lastet opp:
     const images = [
@@ -184,5 +238,42 @@
     }, intervalMs);
   </script>
 
+  <script>
+  async function loadFeed(){
+    try{
+      const res = await fetch("feed.json?ts=" + Date.now(), { cache: "no-store" });
+      if(!res.ok) throw new Error("feed.json " + res.status);
+      const data = await res.json();
+
+      const el = document.getElementById("noticeList");
+      const items = (data.items || []).slice(0, 6);
+
+      if(items.length === 0){
+        el.textContent = "Ingen meldinger akkurat nå.";
+        return;
+      }
+
+      el.innerHTML = items.map(it => `
+        <div class="notice-item">
+          <div class="notice-badge">${it.kind || "INFO"}</div>
+          <div class="notice-text">${escapeHtml(it.text)}<div style="opacity:.65;font-size:.9rem;margin-top:2px">${new Date(it.createdAt).toLocaleString("no-NO")}</div></div>
+        </div>
+      `).join("");
+    }catch(e){
+      console.error(e);
+    }
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  loadFeed();
+  setInterval(loadFeed, 10_000); // hver 10. sekund
+</script>
+
+  
 </body>
 </html>
