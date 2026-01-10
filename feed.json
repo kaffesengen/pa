@@ -1,4 +1,11 @@
 {
-  "updatedAt": "2026-01-10T15:14:07.811Z",
-  "items": []
+  "updatedAt": "2026-01-10T15:24:58.964Z",
+  "items": [
+    {
+      "id": "0572ec97-df8d-4ae2-8697-056fd1b472e7",
+      "kind": "INFO",
+      "text": "Neste Ungdomsmøte blir på torsdag 15. jan",
+      "createdAt": "2026-01-10T15:24:58.964Z"
+    }
+  ]
 }
