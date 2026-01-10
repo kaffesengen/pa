@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panorama Arena – Sal 2. etg</title>
+
+  <script>
+    setInterval(() => location.reload(), 5 * 60 * 1000);
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: #0b0f14;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 1.2rem 2.5rem;
+      font-size: 2rem;
+      font-weight: 500;
+      background: linear-gradient(90deg, #141e30, #243b55);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      letter-spacing: 0.4px;
+    }
+
+    .frame-wrapper {
+      flex: 1;
+      padding: 1.5rem;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border-radius: 18px;
+      border: none;
+      background: black;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <header>Panorama Arena – Sal 2. etg</header>
+
+  <div class="frame-wrapper">
+    <iframe
+      src="https://teamup.com/ksqn9dtm67gsfz73fw?tz=Calendar%20default&showHeader=0&showLogo=0&showSearch=0&showProfileAndInfo=0&disableSidepanel=1&showTitle=0&showViewSelector=0&showMenu=0&showViewHeader=1&showAgendaDetails=0&showDateControls=0&showDateRange=0"
+      loading="lazy"
+      referrerpolicy="no-referrer"
+      allowfullscreen>
+    </iframe>
+  </div>
+
+</body>
+</html>
