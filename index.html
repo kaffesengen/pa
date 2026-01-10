@@ -343,12 +343,23 @@
       const p = prompt("Passord:");
       if (p === null) return;
 
-      adminAuth = "Basic " + btoa(`${u}:${p}`);
-      sessionStorage.setItem("adminAuth", adminAuth);
+      const candidate = "Basic " + btoa(`${u}:${p}`);
 
-      // Quick auth check by attempting a no-op delete? We'll just refresh and show buttons;
-      // actual auth is validated on delete.
-      await loadFeed();
+// Verifiser mot server før vi “logger inn” i UI
+const ping = await fetch(`${ADMIN_API_BASE}/admin/ping`, {
+  method: "GET",
+  headers: { "Authorization": candidate }
+});
+
+if (!ping.ok) {
+  alert("Feil brukernavn eller passord.");
+  return;
+}
+
+adminAuth = candidate;
+sessionStorage.setItem("adminAuth", adminAuth);
+await loadFeed();
+
     });
 
     function updateLoginButton(){
@@ -434,13 +445,23 @@
               const ok = confirm("Slette denne meldingen?");
               if (!ok) return;
 
-              const success = await deleteItem(id);
-              if (!success) {
-                alert("Kunne ikke slette. Sjekk login (admin/pass) og at boten kjører.");
-                return;
-              }
+              // Optimistisk: skjul linjen med én gang
+const row = btn.closest(".notice-item");
+if (row) row.style.opacity = "0.35";
 
-              await loadFeed();
+const success = await deleteItem(id);
+if (!success) {
+  if (row) row.style.opacity = "1";
+  alert("Kunne ikke slette. Sjekk login (admin/pass) og at boten kjører.");
+  return;
+}
+
+// Fjern fra DOM med én gang
+if (row) row.remove();
+
+// Og oppdater etter litt, så alt er synket
+setTimeout(loadFeed, 1500);
+
             });
           });
         }
