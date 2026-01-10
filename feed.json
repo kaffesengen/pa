@@ -1,17 +1,11 @@
 {
-  "updatedAt": "2026-01-10T14:53:00.347Z",
+  "updatedAt": "2026-01-10T14:53:46.843Z",
   "items": [
     {
       "id": "2ba0fe49-75e6-4224-9d2d-99cc9f94c8a6",
       "kind": "INFO",
       "text": "Her kommer enda en MELDING!",
       "createdAt": "2026-01-10T14:53:00.347Z"
-    },
-    {
-      "id": "c4a3303b-a59d-4f6e-b63a-f6a652591018",
-      "kind": "INFO",
-      "text": "Dette er en testmelding",
-      "createdAt": "2026-01-10T14:52:50.679Z"
     },
     {
       "id": "c258a88d-3841-4c86-ae87-3173f9dbf28c",
