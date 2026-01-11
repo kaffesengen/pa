@@ -37,6 +37,71 @@
       white-space: nowrap;
     }
 
+    header{
+  padding: 1.1rem 2rem;
+  background: linear-gradient(90deg, #141e30, #243b55);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 18px;
+}
+
+/* Diskret tilbakeknapp */
+.back{
+  flex: 0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: rgba(255,255,255,0.92);
+
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  opacity: 0.72;
+  transition: opacity .16s ease, transform .16s ease, background .16s ease;
+  user-select: none;
+}
+
+.back:hover{
+  opacity: 0.95;
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.14);
+}
+
+.back svg{
+  width: 18px;
+  height: 18px;
+  opacity: 0.95;
+}
+
+/* Tekst kan skjules på smalere skjermer */
+.back span{
+  font-size: 0.95rem;
+  letter-spacing: 0.2px;
+}
+
+/* Tittel sentrert “app”-følelse */
+header .title{
+  font-size: 2rem;
+  font-weight: 520;
+  letter-spacing: 0.35px;
+  white-space: nowrap;
+}
+
+/* På smale skjermer: skjul teksten, behold pil */
+@media (max-width: 900px){
+  header .title{ font-size: 1.6rem; }
+  .back span{ display:none; }
+}
+
+    
     /* “Siste melding”-pill */
     .latest-wrap{
       display:flex;
@@ -128,16 +193,24 @@
 <body>
 
   <header>
-    <div class="title">Panorama Arena – Hallen</div>
+  <a class="back" href="../index.html" aria-label="Tilbake til oversikt" title="Tilbake">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 18l-6-6 6-6"></path>
+    </svg>
+    <span>Tilbake</span>
+  </a>
 
-    <div class="latest-wrap" aria-label="Siste melding">
-      <div id="latestPill" class="latest-pill is-hidden">
-        <span id="latestBadge" class="latest-badge">INFO</span>
-        <span id="latestText" class="latest-text">Siste melding …</span>
-        <span id="latestNew" class="latest-new is-hidden">NY</span>
-      </div>
+  <div class="title">Panorama Arena – Hallen</div>
+
+  <div class="latest-wrap" aria-label="Siste melding">
+    <div id="latestPill" class="latest-pill is-hidden">
+      <span id="latestBadge" class="latest-badge">INFO</span>
+      <span id="latestText" class="latest-text">Siste melding …</span>
+      <span id="latestNew" class="latest-new is-hidden">NY</span>
     </div>
-  </header>
+  </div>
+</header>
+
 
   <div class="frame-wrapper">
     <iframe
