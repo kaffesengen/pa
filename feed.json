@@ -1,4 +1,11 @@
 {
-  "updatedAt": "2026-01-10T16:57:59.937Z",
-  "items": []
+  "updatedAt": "2026-01-12T18:07:03.681Z",
+  "items": [
+    {
+      "id": "0ab64cc2-4613-4b15-acd4-79112cd3364f",
+      "kind": "INFO",
+      "text": "dette er en test",
+      "createdAt": "2026-01-12T18:07:03.680Z"
+    }
+  ]
 }
